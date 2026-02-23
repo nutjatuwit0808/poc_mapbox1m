@@ -2,6 +2,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import time
+from pathlib import Path
 
 def generate_realestate_data():
     N = 1_000_000  # จำนวน 1 ล้านจุด
@@ -60,16 +61,12 @@ def generate_realestate_data():
     )
     gdf = gdf.drop(columns=['Longitude', 'Latitude'])
 
-    # 9. Save Data (บันทึกเป็น 2 ฟอร์แมต)
-    # 9.1 Parquet (แนะนำให้ใช้ไฟล์นี้โยนเข้า Supabase เพราะขนาดเล็กมากและเขียนอ่านไวสุดๆ)
-    parquet_file = 'real_estate_1M.parquet'
-    print(f"💾 กำลังเซฟเป็นไฟล์ {parquet_file} (ขนาดจะเล็กมาก)...")
-    gdf.to_parquet(parquet_file, index=False)
-
-    # 9.2 GeoJSON (เอาไว้ใช้รัน Tippecanoe สร้าง PMTiles สำหรับโชว์แผนที่เริ่มต้น)
-    geojson_file = 'real_estate_1M.geojson'
+    # 9. Save Data — บันทึกเฉพาะ GeoJSON ลง raw_data (เอาไว้ใช้รัน Tippecanoe สร้าง PMTiles สำหรับโชว์แผนที่)
+    output_dir = Path(__file__).resolve().parent.parent / "data-pipeline/raw_data"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    geojson_file = output_dir / "real_estate_1M.geojson"
     print(f"💾 กำลังเซฟเป็นไฟล์ {geojson_file} (อาจจะใช้เวลา 1-3 นาที เพราะไฟล์ใหญ่ ~350MB)...")
-    gdf.to_file(geojson_file, driver='GeoJSON')
+    gdf.to_file(str(geojson_file), driver="GeoJSON")
 
     end_time = time.time()
     print(f"✅ เสร็จเรียบร้อย! ใช้เวลาไปทั้งหมด {round(end_time - start_time, 2)} วินาที")

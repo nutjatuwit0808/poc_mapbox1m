@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-data": ".venv/bin/python data-pipeline/generate_realestate.py",
+    "process-data": ".venv/bin/python data-pipeline/processor_raw_realestate.py"
   },
   "dependencies": {
     "axios": "^1.7.0",
