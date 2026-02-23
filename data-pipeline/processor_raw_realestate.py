@@ -49,6 +49,10 @@ def process_geojson_to_parquet_and_pmtiles(
             [
                 "tippecanoe",
                 "-zg",
+                "--cluster-distance=50",
+                "--maximum-tile-bytes=2000000",
+                "--cluster-densest-as-needed",
+                "--extend-zooms-if-still-dropping",
                 "-o",
                 str(pmtiles_path),
                 str(geojson_path),

@@ -4,6 +4,7 @@ import "@/app/globals.css";
 export const metadata: Metadata = {
   title: "POC Mapbox",
   description: "Real estate map with Mapbox tiles",
+  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({

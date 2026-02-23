@@ -1,18 +1,9 @@
 /**
  * Validated env vars (client-safe use NEXT_PUBLIC_*).
- * Extend as needed for Supabase, Mapbox, etc.
+ * Next.js inlines only literal process.env.KEY at build time — dynamic keys (process.env[key]) are not inlined and stay undefined in the client.
  */
-
-function getEnv(key: string, required = false): string {
-  const value = process.env[key];
-  if (required && (value == null || value === "")) {
-    throw new Error(`Missing required env: ${key}`);
-  }
-  return value ?? "";
-}
-
 export const env = {
-  mapboxToken: getEnv("NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN"),
-  supabaseUrl: getEnv("NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  mapboxToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "",
+  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
 } as const;

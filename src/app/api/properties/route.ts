@@ -6,6 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 interface PropertyItem {
   id: string;
   title: string;
