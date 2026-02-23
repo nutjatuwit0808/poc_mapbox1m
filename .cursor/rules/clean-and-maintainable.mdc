@@ -1,0 +1,67 @@
+---
+description: Clean code and maintainability standards for the project
+alwaysApply: true
+---
+
+# Clean Code & Maintainability
+
+- **Naming**: Use clear, descriptive names for variables, functions, and components. Avoid unclear abbreviations.
+- **Single responsibility**: One function/component does one thing. Split into smaller functions or custom hooks when logic grows.
+- **Types**: Use strict TypeScript. Define interfaces/types explicitly; avoid `any`.
+- **Error handling**: In API routes and async code use try/catch, log errors, and return appropriate error responses. Do not swallow errors.
+- **Structure**: Use path alias `@/` for imports from `src`. Follow App Router layout: `app/`, `components/`, `lib/`, `hooks/`.
+- **Constants**: Put magic numbers and strings in constants or env (e.g. `@/env`).
+- **DRY**: Do not copy-paste logic; extract helpers or hooks and reuse.
+- **API calls**: Use the shared axios client from `@/lib/api` for client-side API calls. Use typed helpers from `@/lib/api/*` (e.g. `fetchProperties`) when available.
+
+## Naming
+
+```typescript
+// BAD
+const d = new Date();
+const getD = () => fetch("/api/props");
+
+// GOOD
+const createdAt = new Date();
+import { api } from "@/lib/api";
+const fetchProperties = () => api.get("/api/properties");
+```
+
+## Error handling (API routes)
+
+```typescript
+// BAD
+export async function GET() {
+  const data = await fetchFromDb();
+  return Response.json(data);
+}
+
+// GOOD
+export async function GET() {
+  try {
+    const data = await fetchFromDb();
+    return Response.json(data);
+  } catch (error) {
+    console.error("GET /api/properties failed", error);
+    return Response.json({ error: "Failed to load data" }, { status: 500 });
+  }
+}
+```
+
+## Types
+
+```typescript
+// BAD
+function parseItem(item: any) {
+  return item.id;
+}
+
+// GOOD
+interface Property {
+  id: string;
+  title: string;
+}
+function parseItem(item: Property) {
+  return item.id;
+}
+```

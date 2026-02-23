@@ -1,0 +1,35 @@
+---
+description: Project structure and where each part of the app lives (routing, API, components, store, hooks, lib, types)
+alwaysApply: true
+---
+
+# Project Structure (src/)
+
+Use this layout to know where to add or find code. Path alias: `@/` → `src/`.
+
+- **app/** — Routing and API
+  - **app/api/properties/** — API: list of ~20 properties for the sidebar.
+  - **app/api/tiles/** — API: vector tiles for Mapbox (`[z]/[x]/[y]`).
+  - **app/page.tsx** — Main page: only composes FilterBar + Map + Sidebar; no business logic.
+
+- **components/** — UI by feature
+  - **components/filters/** — Top search/filter bar (FilterBar).
+  - **components/map/** — Map (MapboxViewer).
+  - **components/sidebar/** — Property list (PropertyList).
+  - **components/ui/** — Reusable small pieces (buttons, loaders).
+
+- **store/** — Global state (Zustand)
+  - **store/useFilterStore.ts** — Filter state (e.g. price); Map and Sidebar read from here.
+
+- **hooks/** — Reusable logic
+  - **hooks/useProperties.ts** — Fetches property data from API for the sidebar.
+
+- **lib/** — Utilities and clients
+  - **lib/api.ts** — Shared axios instance for client-side API calls.
+  - **lib/api/** — Typed API helpers (e.g. properties).
+  - **lib/supabase.ts** — Supabase client (DB).
+
+- **types/** — TypeScript contracts
+  - **types/database.ts** — Data shapes (e.g. `Property`).
+
+When adding code: put routes in `app/`, UI in `components/`, global state in `store/`, data-fetch logic in `hooks/`, and shared helpers in `lib/` or `types/`.

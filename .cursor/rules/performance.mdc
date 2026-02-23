@@ -1,0 +1,37 @@
+---
+description: Performance guidelines for React, data fetching, and bundle size
+alwaysApply: true
+---
+
+# Performance
+
+- **React**: Use `React.memo`, `useMemo`, and `useCallback` only when re-renders are costly or callbacks are passed down many levels. Avoid overusing.
+- **Dynamic import**: Load Mapbox and other heavy components with `next/dynamic`; disable SSR when not needed to reduce initial JS.
+- **Data fetching**: Prefer Server Components and server-side fetch in App Router. Use client components only when needed. Set cache/cache-control where appropriate.
+- **API design**: Keep API responses small. Use pagination or tile-based responses for large data (e.g. `/api/properties`, `/api/tiles/...`). Avoid over-fetching.
+- **Bundle**: Prefer tree-shakeable imports; avoid importing entire libraries when only a subset is used.
+- **API**: Use the shared `api` (axios) instance from `@/lib/api` so timeouts and interceptors apply consistently; prefer typed helpers in `@/lib/api/*` for specific endpoints.
+
+## Dynamic import (Mapbox)
+
+```typescript
+// BAD: loads mapbox on every page load
+import Map from "@/components/Map";
+
+// GOOD: load only when needed, no SSR for map
+import dynamic from "next/dynamic";
+const Map = dynamic(() => import("@/components/Map"), { ssr: false });
+```
+
+## API response shape
+
+```typescript
+// BAD: returning full entities when list only needs ids/titles
+return Response.json(await db.properties.findMany());
+
+// GOOD: minimal fields, pagination for large sets
+return Response.json({
+  items: properties.map((p) => ({ id: p.id, title: p.title })),
+  nextCursor: lastId,
+});
+```
