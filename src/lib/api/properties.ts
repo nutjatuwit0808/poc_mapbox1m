@@ -1,14 +1,12 @@
 /**
- * Typed API helpers for /api/properties.
- * Use the shared api client from @/lib/api for all client-side API calls.
+ * Typed API helpers สำหรับ /api/properties
+ * ใช้ shared api client จาก @/lib/api สำหรับ client-side API calls
  */
 
 import { api } from "@/lib/api";
+import type { PropertyItem } from "@/types/properties";
 
-export interface PropertyItem {
-  id: string;
-  title: string;
-}
+export type { PropertyItem };
 
 export interface PropertiesResponse {
   items: PropertyItem[];

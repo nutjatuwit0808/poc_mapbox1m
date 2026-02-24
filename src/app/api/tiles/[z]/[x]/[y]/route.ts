@@ -1,12 +1,12 @@
 /**
- * GET /api/tiles/[z]/[x]/[y] — vector tiles for Mapbox.
- * Returns MVT (application/vnd.mapbox-vector-tile).
- * POC: returns empty valid tile; extend later with PostGIS/GeoJSON.
+ * GET /api/tiles/[z]/[x]/[y] — vector tiles สำหรับ Mapbox
+ * Returns MVT (application/vnd.mapbox-vector-tile)
+ * POC: คืนค่า empty valid tile; ขยายต่อด้วย PostGIS/GeoJSON ได้
  */
 
 import { NextRequest, NextResponse } from "next/server";
 
-const MAX_ZOOM = 22;
+import { TILES_MAX_ZOOM } from "@/lib/constants";
 
 function getTileBounds(z: number): number {
   return Math.pow(2, z);
@@ -16,7 +16,7 @@ function isValidTile(z: number, x: number, y: number): boolean {
   if (!Number.isInteger(z) || !Number.isInteger(x) || !Number.isInteger(y)) {
     return false;
   }
-  if (z < 0 || z > MAX_ZOOM) {
+  if (z < 0 || z > TILES_MAX_ZOOM) {
     return false;
   }
   const max = getTileBounds(z);
@@ -40,7 +40,7 @@ export async function GET(
       );
     }
 
-    // POC: empty valid MVT (no layers). Mapbox accepts this as "no data" for the tile.
+    // POC: empty valid MVT (ไม่มี layers) — Mapbox ยอมรับเป็น "no data"
     const buffer = new Uint8Array(0);
 
     return new NextResponse(buffer, {
@@ -51,7 +51,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("GET /api/tiles/[z]/[x]/[y] failed", error);
+    console.error("GET /api/tiles/[z]/[x]/[y] ล้มเหลว", error);
     return NextResponse.json(
       { error: "Failed to load tile" },
       { status: 500 }

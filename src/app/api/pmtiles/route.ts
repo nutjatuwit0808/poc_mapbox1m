@@ -1,19 +1,24 @@
 /**
- * GET /api/pmtiles — stream PMTiles file from data-pipeline/processed_data.
- * Supports Range requests required by the PMTiles client.
+ * GET /api/pmtiles — stream ไฟล์ PMTiles จาก data-pipeline/processed_data
+ * รองรับ Range requests ที่ PMTiles client ต้องการ
  */
 
-import { NextRequest, NextResponse } from "next/server";
-
-export const dynamic = "force-dynamic";
 import { open, readFile, stat } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
+import { NextRequest, NextResponse } from "next/server";
 
-const PMTILES_FILENAME = "real_estate_1M.pmtiles";
+import { PMTILES_FILENAME } from "@/lib/constants";
+
+export const dynamic = "force-dynamic";
 
 function getPmtilesPath(): string {
-  return path.join(process.cwd(), "data-pipeline", "processed_data", PMTILES_FILENAME);
+  return path.join(
+    process.cwd(),
+    "data-pipeline",
+    "processed_data",
+    PMTILES_FILENAME
+  );
 }
 
 export async function GET(request: NextRequest) {
@@ -64,7 +69,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("GET /api/pmtiles failed", error);
+    console.error("GET /api/pmtiles ล้มเหลว", error);
     return NextResponse.json({ error: "Failed to serve PMTiles" }, { status: 500 });
   }
 }

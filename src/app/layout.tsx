@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+
 import "@/app/globals.css";
 
+// Metadata สำหรับ SEO
 export const metadata: Metadata = {
   title: "POC Mapbox",
   description: "Real estate map with Mapbox tiles",

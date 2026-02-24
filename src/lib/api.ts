@@ -1,9 +1,11 @@
 /**
- * Shared axios instance for client-side API calls.
- * Use this instead of raw fetch so base URL, timeouts, and error handling stay consistent.
+ * Shared axios instance สำหรับ client-side API calls
+ * ใช้แทน raw fetch เพื่อให้ base URL, timeout และ error handling สม่ำเสมอ
  */
 
 import axios, { type AxiosError } from "axios";
+
+import { API_TIMEOUT_MS } from "@/lib/constants";
 
 const baseURL =
   typeof window !== "undefined"
@@ -12,7 +14,7 @@ const baseURL =
 
 export const api = axios.create({
   baseURL,
-  timeout: 15_000,
+  timeout: API_TIMEOUT_MS,
   headers: { "Content-Type": "application/json" },
 });
 

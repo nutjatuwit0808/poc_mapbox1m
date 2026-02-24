@@ -1,3 +1,6 @@
+/**
+ * Type declarations สำหรับ mapbox-pmtiles
+ */
 declare module "mapbox-pmtiles/dist/mapbox-pmtiles.js" {
   export const PmTilesSource: {
     SOURCE_TYPE: string;

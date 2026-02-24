@@ -1,7 +1,7 @@
 """
-Process raw real estate GeoJSON into Parquet and PMTiles.
-Input: .geojson (e.g. from raw_data).
-Output: .parquet and .pmtiles in processed_data.
+ประมวลผล GeoJSON อสังหาริมทรัพย์เป็น Parquet และ PMTiles
+Input: .geojson (จาก raw_data)
+Output: .parquet และ .pmtiles ใน processed_data
 """
 
 import argparse
@@ -11,9 +11,13 @@ from pathlib import Path
 
 import geopandas as gpd
 
+# ค่าคงที่สำหรับ tippecanoe
+CLUSTER_DISTANCE = 50  # รวมจุดที่ใกล้กันภายใน 50 px เป็น cluster
+CLUSTER_MAXZOOM = 14  # หยุด cluster ที่ zoom 14 — เหนือนี้แสดงจุดเดี่ยว
+
 
 def get_default_paths() -> tuple[Path, Path]:
-    """Return (default_geojson_path, default_processed_dir)."""
+    """คืนค่า (path GeoJSON เริ่มต้น, โฟลเดอร์ output เริ่มต้น)"""
     base = Path(__file__).resolve().parent
     return base / "raw_data" / "real_estate_1M.geojson", base / "processed_data"
 
@@ -23,8 +27,8 @@ def process_geojson_to_parquet_and_pmtiles(
     processed_dir: Path,
 ) -> None:
     """
-    Read GeoJSON, write Parquet and PMTiles to processed_dir.
-    Creates processed_dir if it does not exist.
+    อ่าน GeoJSON เขียน Parquet และ PMTiles ไปที่ processed_dir
+    สร้าง processed_dir ถ้ายังไม่มี
     """
     if not geojson_path.exists():
         print(f"Error: GeoJSON file not found: {geojson_path}", file=sys.stderr)
@@ -33,7 +37,7 @@ def process_geojson_to_parquet_and_pmtiles(
     processed_dir.mkdir(parents=True, exist_ok=True)
     stem = geojson_path.stem
 
-    # 1. Parquet
+    # 1. เขียน Parquet
     parquet_path = processed_dir / f"{stem}.parquet"
     print(f"Reading GeoJSON: {geojson_path}")
     gdf = gpd.read_file(geojson_path)
@@ -41,18 +45,22 @@ def process_geojson_to_parquet_and_pmtiles(
     gdf.to_parquet(parquet_path, index=False)
     print("Parquet done.")
 
-    # 2. PMTiles (via tippecanoe)
+    # 2. สร้าง PMTiles (ผ่าน tippecanoe)
     pmtiles_path = processed_dir / f"{stem}.pmtiles"
     try:
         print(f"Building PMTiles with tippecanoe: {pmtiles_path}")
         result = subprocess.run(
             [
                 "tippecanoe",
-                "-zg",
-                "--cluster-distance=50",
-                "--maximum-tile-bytes=2000000",
-                "--cluster-densest-as-needed",
-                "--extend-zooms-if-still-dropping",
+                "-zg",  # ตรวจจับ minzoom/maxzoom อัตโนมัติจากข้อมูล
+                "-r1",  # ปิด drop rate — ไม่ drop จุดที่ zoom ต่ำ (default 2.5 จะ drop เยอะ)
+                "--force",  # เขียนทับไฟล์ PMTiles เดิม
+                f"--cluster-distance={CLUSTER_DISTANCE}",
+                f"--cluster-maxzoom={CLUSTER_MAXZOOM}",
+                "--cluster-densest-as-needed",  # cluster แทน drop เมื่อ tile ใหญ่เกิน
+                "--extend-zooms-if-still-dropping",  # เพิ่ม maxzoom ถ้ายัง drop อยู่
+                "--no-feature-limit",  # ไม่จำกัดจำนวน feature ต่อ tile (default 200K)
+                "--no-tile-size-limit",  # ไม่จำกัดขนาด tile (default 500KB)
                 "-o",
                 str(pmtiles_path),
                 str(geojson_path),
@@ -65,12 +73,12 @@ def process_geojson_to_parquet_and_pmtiles(
                 print(result.stderr, file=sys.stderr)
             if result.stdout:
                 print(result.stdout, file=sys.stderr)
-            print("tippecanoe failed.", file=sys.stderr)
+            print("tippecanoe ล้มเหลว", file=sys.stderr)
             sys.exit(1)
         print("PMTiles done.")
     except FileNotFoundError:
         print(
-            "tippecanoe not found. Install it (e.g. brew install tippecanoe) to generate .pmtiles. Skipping PMTiles.",
+            "ไม่พบ tippecanoe — ติดตั้ง (เช่น brew install tippecanoe) เพื่อสร้าง .pmtiles ข้าม PMTiles",
             file=sys.stderr,
         )
 
@@ -78,21 +86,21 @@ def process_geojson_to_parquet_and_pmtiles(
 def main() -> None:
     default_geojson, default_processed = get_default_paths()
     parser = argparse.ArgumentParser(
-        description="Process real estate GeoJSON to Parquet and PMTiles."
+        description="ประมวลผล GeoJSON อสังหาริมทรัพย์เป็น Parquet และ PMTiles"
     )
     parser.add_argument(
         "geojson",
         type=Path,
         nargs="?",
         default=default_geojson,
-        help=f"Input GeoJSON path (default: {default_geojson})",
+        help=f"Path ไฟล์ GeoJSON (default: {default_geojson})",
     )
     parser.add_argument(
         "-o",
         "--output-dir",
         type=Path,
         default=default_processed,
-        help=f"Output directory for .parquet and .pmtiles (default: {default_processed})",
+        help=f"โฟลเดอร์ output สำหรับ .parquet และ .pmtiles (default: {default_processed})",
     )
     args = parser.parse_args()
     process_geojson_to_parquet_and_pmtiles(args.geojson, args.output_dir)

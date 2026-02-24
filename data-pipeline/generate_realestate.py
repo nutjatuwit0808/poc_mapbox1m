@@ -1,76 +1,110 @@
-import pandas as pd
-import geopandas as gpd
-import numpy as np
+"""
+สร้างข้อมูลอสังหาริมทรัพย์จำลองเป็น GeoJSON
+Output: real_estate_1M.geojson ใน raw_data
+"""
+
 import time
 from pathlib import Path
 
+import geopandas as gpd
+import numpy as np
+import pandas as pd
+
+# ค่าคงที่
+N_POINTS = 1_000_000  # จำนวนจุด
+THAILAND_BBOX = {"lon_min": 97.35, "lon_max": 105.64, "lat_min": 5.61, "lat_max": 20.46}
+PROPERTY_TYPE_PROBS = [0.40, 0.30, 0.20, 0.10]  # Condo, Townhouse, Detached House, Land
+BEDROOM_RANGE = (1, 6)  # 1-5 ห้อง
+BASE_AREA_PER_BEDROOM = 25  # ตร.ม. ต่อห้อง
+AREA_VARIANCE = (10, 50)  # ความแปรปรวนพื้นที่
+PRICE_PER_SQM_RANGE = (50_000, 150_000)  # บาท/ตร.ม.
+LAND_AREA_RANGE = (100, 2000)  # พื้นที่ดิน ตร.ม.
+
+
 def generate_realestate_data():
-    N = 1_000_000  # จำนวน 1 ล้านจุด
-    print(f"🚀 เริ่มสร้างข้อมูลอสังหาฯ จำลอง {N:,} รายการ...")
+    print(f"🚀 เริ่มสร้างข้อมูลอสังหาฯ จำลอง {N_POINTS:,} รายการ...")
     start_time = time.time()
 
     # 1. สุ่มพิกัดให้ครอบคลุมทั่วประเทศไทย
-    # Bounding box: lon 97.35-105.64, lat 5.61-20.46
-    lons = np.random.uniform(low=97.35, high=105.64, size=N)
-    lats = np.random.uniform(low=5.61, high=20.46, size=N)
-
-    # 2. กำหนดประเภทอสังหาฯ แบบกำหนดสัดส่วนความน่าจะเป็น (Probabilities)
-    property_types = np.random.choice(
-        ['Condo', 'Townhouse', 'Detached House', 'Land'], 
-        p=[0.40, 0.30, 0.20, 0.10], 
-        size=N
+    lons = np.random.uniform(
+        low=THAILAND_BBOX["lon_min"],
+        high=THAILAND_BBOX["lon_max"],
+        size=N_POINTS,
+    )
+    lats = np.random.uniform(
+        low=THAILAND_BBOX["lat_min"],
+        high=THAILAND_BBOX["lat_max"],
+        size=N_POINTS,
     )
 
-    # 3. สุ่มจำนวนห้องนอน (1-5 ห้อง) และพื้นที่ใช้สอยพื้นฐาน
-    bedrooms = np.random.randint(1, 6, size=N)
-    
-    # ห้องน้ำมักจะสัมพันธ์กับห้องนอน (น้อยกว่าหรือเท่ากับจำนวนห้องนอน 1 ห้อง)
-    bathrooms = np.where(bedrooms > 1, bedrooms - np.random.randint(0, 2, size=N), 1)
+    # 2. กำหนดประเภทอสังหาฯ แบบกำหนดสัดส่วนความน่าจะเป็น
+    property_types = np.random.choice(
+        ["Condo", "Townhouse", "Detached House", "Land"],
+        p=PROPERTY_TYPE_PROBS,
+        size=N_POINTS,
+    )
+
+    # 3. สุ่มจำนวนห้องนอน และห้องน้ำ
+    bedrooms = np.random.randint(BEDROOM_RANGE[0], BEDROOM_RANGE[1], size=N_POINTS)
+    bathrooms = np.where(
+        bedrooms > 1, bedrooms - np.random.randint(0, 2, size=N_POINTS), 1
+    )
 
     # 4. คำนวณพื้นที่ใช้สอย (ตร.ม.) ให้สอดคล้องกับจำนวนห้อง
-    base_area = bedrooms * 25  # ตีซะว่าห้องนึงใช้พื้นที่ 25 ตร.ม.
-    usable_area = base_area + np.random.randint(10, 50, size=N)
+    base_area = bedrooms * BASE_AREA_PER_BEDROOM
+    usable_area = base_area + np.random.randint(
+        AREA_VARIANCE[0], AREA_VARIANCE[1], size=N_POINTS
+    )
 
-    # 5. สุ่มราคาประเมินต่อตารางเมตร (50,000 - 150,000 บาท) เพื่อคำนวณราคาสุทธิ
-    price_per_sqm = np.random.randint(50_000, 150_000, size=N)
+    # 5. สุ่มราคาประเมินต่อตารางเมตร เพื่อคำนวณราคาสุทธิ
+    price_per_sqm = np.random.randint(
+        PRICE_PER_SQM_RANGE[0], PRICE_PER_SQM_RANGE[1], size=N_POINTS
+    )
     prices = usable_area * price_per_sqm
 
-    # 6. จับยัดลง DataFrame
-    df = pd.DataFrame({
-        'id': np.arange(1, N + 1),
-        'property_type': property_types,
-        'price': prices,
-        'bedrooms': bedrooms,
-        'bathrooms': bathrooms,
-        'usable_area_sqm': usable_area,
-        'Longitude': lons,
-        'Latitude': lats
-    })
+    # 6. สร้าง DataFrame
+    df = pd.DataFrame(
+        {
+            "id": np.arange(1, N_POINTS + 1),
+            "property_type": property_types,
+            "price": prices,
+            "bedrooms": bedrooms,
+            "bathrooms": bathrooms,
+            "usable_area_sqm": usable_area,
+            "Longitude": lons,
+            "Latitude": lats,
+        }
+    )
 
-    # 7. 🧹 คลีนข้อมูลให้สมจริง: กรณีที่เป็น "ที่ดิน (Land)" ต้องไม่มีห้องนอน/ห้องน้ำ 
-    is_land = df['property_type'] == 'Land'
-    df.loc[is_land, 'bedrooms'] = 0
-    df.loc[is_land, 'bathrooms'] = 0
-    df.loc[is_land, 'usable_area_sqm'] = np.random.randint(100, 2000, size=is_land.sum()) # พื้นที่ดินกว้างกว่าบ้านปกติ
+    # 7. คลีนข้อมูล: ที่ดิน (Land) ต้องไม่มีห้องนอน/ห้องน้ำ
+    is_land = df["property_type"] == "Land"
+    df.loc[is_land, "bedrooms"] = 0
+    df.loc[is_land, "bathrooms"] = 0
+    df.loc[is_land, "usable_area_sqm"] = np.random.randint(
+        LAND_AREA_RANGE[0], LAND_AREA_RANGE[1], size=is_land.sum()
+    )
 
     # 8. แปลงเป็น GeoDataFrame
     print("🗺️ กำลังแปลงโครงสร้างเป็น GeoDataFrame...")
     gdf = gpd.GeoDataFrame(
-        df, 
+        df,
         geometry=gpd.points_from_xy(df.Longitude, df.Latitude),
-        crs="EPSG:4326"
+        crs="EPSG:4326",
     )
-    gdf = gdf.drop(columns=['Longitude', 'Latitude'])
+    gdf = gdf.drop(columns=["Longitude", "Latitude"])
 
-    # 9. Save Data — บันทึกเฉพาะ GeoJSON ลง raw_data (เอาไว้ใช้รัน Tippecanoe สร้าง PMTiles สำหรับโชว์แผนที่)
-    output_dir = Path(__file__).resolve().parent.parent / "data-pipeline/raw_data"
+    # 9. บันทึก GeoJSON ลง raw_data
+    output_dir = Path(__file__).resolve().parent / "raw_data"
     output_dir.mkdir(parents=True, exist_ok=True)
     geojson_file = output_dir / "real_estate_1M.geojson"
-    print(f"💾 กำลังเซฟเป็นไฟล์ {geojson_file} (อาจจะใช้เวลา 1-3 นาที เพราะไฟล์ใหญ่ ~350MB)...")
+    print(
+        f"💾 กำลังเซฟเป็นไฟล์ {geojson_file} (อาจจะใช้เวลา 1-3 นาที เพราะไฟล์ใหญ่ ~350MB)..."
+    )
     gdf.to_file(str(geojson_file), driver="GeoJSON")
 
     end_time = time.time()
     print(f"✅ เสร็จเรียบร้อย! ใช้เวลาไปทั้งหมด {round(end_time - start_time, 2)} วินาที")
+
 
 if __name__ == "__main__":
     generate_realestate_data()

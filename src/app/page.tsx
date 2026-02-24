@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 
+// โหลดแผนที่แบบ dynamic ไม่ SSR (mapbox-gl ต้องรันบน client)
 const MapboxViewer = dynamic(
   () => import("@/components/map/MapboxViewer"),
   {
@@ -15,9 +16,6 @@ const MapboxViewer = dynamic(
 export default function HomePage() {
   return (
     <main className="app">
-      <header className="app-header">
-        <h1>POC Mapbox</h1>
-      </header>
       <div className="app-map">
         <MapboxViewer />
       </div>
