@@ -18,7 +18,15 @@ export const CLUSTER_RADIUS_SMALL = 20;
 export const CLUSTER_RADIUS_MEDIUM = 30;
 export const CLUSTER_RADIUS_LARGE = 40;
 
+/** GeoJSON clustering — สอดคล้องกับ tippecanoe (processor_raw_realestate.py) */
+export const CLUSTER_RADIUS = 50;
+export const CLUSTER_MAX_ZOOM = 14;
+
 export const PMTILES_SOURCE_ID = "pmtiles-realestate";
 export const CLUSTERS_LAYER_ID = "clusters";
 export const UNCLUSTERED_LAYER_ID = "unclustered-point";
 export const PMTILES_SOURCE_LAYER_FALLBACK = "real_estate_1M";
+
+export const FILTERED_SOURCE_ID = "filtered-points";
+export const FILTERED_CLUSTERS_LAYER_ID = "filtered-clusters";
+export const FILTERED_UNCLUSTERED_LAYER_ID = "filtered-unclustered-point";

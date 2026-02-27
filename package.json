@@ -12,6 +12,7 @@
     "process-data": ".venv/bin/python data-pipeline/processor_raw_realestate.py"
   },
   "dependencies": {
+    "@duckdb/node-api": "^1.4.4-r.1",
     "@supabase/supabase-js": "^2.45.0",
     "axios": "^1.7.0",
     "lucide-react": "^0.575.0",

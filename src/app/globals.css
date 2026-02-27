@@ -88,6 +88,22 @@ body {
   bottom: 0;
   pointer-events: none;
   overflow: hidden;
+  z-index: 1;
+}
+
+/* Popup container — ลอยอยู่เหนือ cluster labels */
+.popup-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.popup-container .mapboxgl-popup {
+  pointer-events: auto;
 }
 
 .cluster-label-badge {
@@ -102,4 +118,147 @@ body {
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+/* FilterPanel — floating left, expand/collapse */
+.filter-panel {
+  position: fixed;
+  left: 12px;
+  top: 80px;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.filter-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.filter-panel-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.filter-panel-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-panel-content {
+  padding: 16px;
+  min-width: 260px;
+  border-left: 1px solid #e5e7eb;
+}
+
+.filter-panel-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.filter-panel-field {
+  margin-bottom: 10px;
+}
+
+.filter-panel-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.filter-panel-field input,
+.filter-panel-field select {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.filter-panel-field input:focus,
+.filter-panel-field select:focus {
+  outline: none;
+  border-color: #11b4da;
+  box-shadow: 0 0 0 2px rgba(17, 180, 218, 0.2);
+}
+
+.filter-panel-row {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-panel-row .filter-panel-field {
+  flex: 1;
+}
+
+.filter-panel-error {
+  margin: 10px 0;
+  padding: 8px;
+  font-size: 12px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 4px;
+}
+
+.filter-panel-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.filter-panel-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.filter-panel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filter-panel-btn-primary {
+  background: #11b4da;
+  color: white;
+}
+
+.filter-panel-btn-primary:hover:not(:disabled) {
+  background: #0d9bb8;
+}
+
+.filter-panel-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.filter-panel-btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.filter-panel-hint {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #6b7280;
 }

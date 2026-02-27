@@ -5,7 +5,6 @@
 
 import mapboxgl from "mapbox-gl";
 import { throttle } from "@/lib/throttle";
-import { CLUSTERS_LAYER_ID } from "./constants";
 import type { ClusterLabel } from "./types";
 
 const THROTTLE_MS = 100;
@@ -13,11 +12,13 @@ const THROTTLE_MS = 100;
 /** อ่าน cluster features จากแผนที่และอัปเดต labels */
 export function updateClusterLabels(
   map: mapboxgl.Map,
-  setLabels: (labels: ClusterLabel[]) => void
+  setLabels: (labels: ClusterLabel[]) => void,
+  getLayerId: () => string
 ): void {
-  if (!map.getLayer(CLUSTERS_LAYER_ID)) return;
+  const layerId = getLayerId();
+  if (!layerId || !map.getLayer(layerId)) return;
   try {
-    const features = map.queryRenderedFeatures({ layers: [CLUSTERS_LAYER_ID] });
+    const features = map.queryRenderedFeatures({ layers: [layerId] });
     const seen = new Set<string>();
     const labels: ClusterLabel[] = [];
     for (const f of features) {
@@ -43,10 +44,11 @@ export function updateClusterLabels(
 /** ตั้งค่า listener สำหรับอัปเดต labels เมื่อแผนที่เคลื่อนที่ (throttled) */
 export function setupClusterLabelUpdates(
   map: mapboxgl.Map,
-  setLabels: (labels: ClusterLabel[]) => void
+  setLabels: (labels: ClusterLabel[]) => void,
+  getLayerId: () => string
 ): void {
   const throttledUpdate = throttle(
-    () => updateClusterLabels(map, setLabels),
+    () => updateClusterLabels(map, setLabels, getLayerId),
     THROTTLE_MS
   );
 

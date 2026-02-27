@@ -6,6 +6,7 @@ import { PmTilesSource } from "mapbox-pmtiles/dist/mapbox-pmtiles.js";
 import { env } from "@/env";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+import { useFilterStore } from "@/store/useFilterStore";
 import {
   MAP_DEFAULT_CENTER,
   MAP_DEFAULT_ZOOM,
@@ -13,6 +14,7 @@ import {
   MAP_ZOOM_RATE_WHEEL,
   MAP_ZOOM_RATE,
   CLUSTERS_LAYER_ID,
+  FILTERED_CLUSTERS_LAYER_ID,
   UNCLUSTERED_LAYER_ID,
   loadPmtilesSource,
   addClustersLayer,
@@ -21,16 +23,25 @@ import {
   addUnclusteredClickInteraction,
   addCursorPointerForLayers,
   setupClusterLabelUpdates,
+  updateClusterLabels,
   getClusterColor,
   getBadgeSize,
+  setFilteredPointsLayer,
+  removeFilteredPointsLayer,
+  setPmtilesLayersVisibility,
 } from "@/lib/map";
 import type { ClusterLabel } from "@/lib/map";
 
 export default function MapboxViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const popupContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [zoomLevel, setZoomLevel] = useState<number>(MAP_DEFAULT_ZOOM);
   const [clusterLabels, setClusterLabels] = useState<ClusterLabel[]>([]);
+
+  const filteredGeoJson = useFilterStore((s) => s.filteredGeoJson);
+  const isFilterActive = useFilterStore((s) => s.isFilterActive);
 
   useEffect(() => {
     if (!env.mapboxToken || !containerRef.current) return;
@@ -64,9 +75,14 @@ export default function MapboxViewer() {
         addClustersLayer(map, sourceLayer);
         addUnclusteredLayer(map, sourceLayer);
         addClusterClickInteraction(map);
-        addUnclusteredClickInteraction(map);
+        addUnclusteredClickInteraction(map, popupContainerRef.current ?? undefined);
         addCursorPointerForLayers(map, [CLUSTERS_LAYER_ID, UNCLUSTERED_LAYER_ID]);
-        setupClusterLabelUpdates(map, setClusterLabels);
+        setupClusterLabelUpdates(map, setClusterLabels, () =>
+          useFilterStore.getState().isFilterActive
+            ? FILTERED_CLUSTERS_LAYER_ID
+            : CLUSTERS_LAYER_ID
+        );
+        setMapReady(true);
       } catch (err) {
         console.error("Failed to load PMTiles source:", err);
       }
@@ -76,8 +92,37 @@ export default function MapboxViewer() {
       map.off("zoom", onZoom);
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
   }, []);
+
+  // Sync filtered points layer เมื่อ filter เปลี่ยน
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+
+    if (isFilterActive && filteredGeoJson) {
+      setFilteredPointsLayer(map, filteredGeoJson, popupContainerRef.current ?? undefined);
+      setPmtilesLayersVisibility(map, false);
+      map.once("idle", () => {
+        updateClusterLabels(map, setClusterLabels, () =>
+          useFilterStore.getState().isFilterActive
+            ? FILTERED_CLUSTERS_LAYER_ID
+            : CLUSTERS_LAYER_ID
+        );
+      });
+    } else {
+      removeFilteredPointsLayer(map);
+      setPmtilesLayersVisibility(map, true);
+      map.once("idle", () => {
+        updateClusterLabels(map, setClusterLabels, () =>
+          useFilterStore.getState().isFilterActive
+            ? FILTERED_CLUSTERS_LAYER_ID
+            : CLUSTERS_LAYER_ID
+        );
+      });
+    }
+  }, [mapReady, isFilterActive, filteredGeoJson]);
 
   if (!env.mapboxToken) {
     return (
@@ -114,6 +159,7 @@ export default function MapboxViewer() {
           </div>
         ))}
       </div>
+      <div ref={popupContainerRef} className="popup-container" aria-hidden="true" />
     </div>
   );
 }
