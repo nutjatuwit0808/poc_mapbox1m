@@ -28,13 +28,13 @@ Use this layout to know where to add or find code. Path alias: `@/` → `src/`.
   - **lib/api.ts** — Shared axios instance for client-side API calls.
   - **lib/api/** — Typed API helpers (e.g. properties).
   - **lib/map/** — Map helpers สำหรับ MapboxViewer
-    - **lib/map/clusterUtils.ts** — สี/ขนาด cluster, formatPrice
+    - **lib/map/clusterUtils.ts** — สี/ขนาด cluster, formatPrice, buildPropertyPopupHtml
     - **lib/map/pmtiles.ts** — URL และโหลด PMTiles source
     - **lib/map/layers.ts** — เพิ่ม layers (clusters, unclustered)
     - **lib/map/interactions.ts** — คลิก cluster/จุด, cursor pointer
     - **lib/map/clusterLabels.ts** — อัปเดต label overlay
-    - **lib/map/constants.ts** — layer IDs, source ID
-    - **lib/map/types.ts** — ClusterLabel
+    - **lib/map/constants.ts** — layer IDs, source ID, UNCLUSTERED_CIRCLE_PAINT
+    - **lib/map/types.ts** — ClusterLabel, PropertyPopupProps
   - **lib/supabase.ts** — Supabase client (DB).
 
 - **types/** — TypeScript contracts

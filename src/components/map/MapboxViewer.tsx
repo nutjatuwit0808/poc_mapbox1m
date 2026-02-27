@@ -101,26 +101,25 @@ export default function MapboxViewer() {
     const map = mapRef.current;
     if (!map || !mapReady) return;
 
+    const getActiveClusterLayerId = () =>
+      useFilterStore.getState().isFilterActive
+        ? FILTERED_CLUSTERS_LAYER_ID
+        : CLUSTERS_LAYER_ID;
+
+    const scheduleLabelUpdate = () => {
+      map.once("idle", () => {
+        updateClusterLabels(map, setClusterLabels, getActiveClusterLayerId);
+      });
+    };
+
     if (isFilterActive && filteredGeoJson) {
       setFilteredPointsLayer(map, filteredGeoJson, popupContainerRef.current ?? undefined);
       setPmtilesLayersVisibility(map, false);
-      map.once("idle", () => {
-        updateClusterLabels(map, setClusterLabels, () =>
-          useFilterStore.getState().isFilterActive
-            ? FILTERED_CLUSTERS_LAYER_ID
-            : CLUSTERS_LAYER_ID
-        );
-      });
+      scheduleLabelUpdate();
     } else {
       removeFilteredPointsLayer(map);
       setPmtilesLayersVisibility(map, true);
-      map.once("idle", () => {
-        updateClusterLabels(map, setClusterLabels, () =>
-          useFilterStore.getState().isFilterActive
-            ? FILTERED_CLUSTERS_LAYER_ID
-            : CLUSTERS_LAYER_ID
-        );
-      });
+      scheduleLabelUpdate();
     }
   }, [mapReady, isFilterActive, filteredGeoJson]);
 

@@ -14,6 +14,28 @@ import {
   CLUSTER_RADIUS_LARGE,
 } from "./constants";
 
+/** สร้าง HTML สำหรับ property popup จาก properties object */
+export function buildPropertyPopupHtml(props: Record<string, unknown>): string {
+  const price = props.price != null ? Number(props.price) : 0;
+  const area =
+    props.usable_area_sqm != null ? Number(props.usable_area_sqm) : 0;
+  const propertyType = props.property_type ?? "—";
+  const bedrooms = props.bedrooms != null ? Number(props.bedrooms) : null;
+  const bathrooms = props.bathrooms != null ? Number(props.bathrooms) : null;
+
+  const html = [
+    `<strong>${propertyType}</strong>`,
+    price > 0 ? `Price: ฿${formatPrice(price)}` : null,
+    bedrooms != null ? `Bedrooms: ${bedrooms}` : null,
+    bathrooms != null ? `Bathrooms: ${bathrooms}` : null,
+    area > 0 ? `Area: ${area} m²` : null,
+  ]
+    .filter(Boolean)
+    .join("<br>");
+
+  return html || "—";
+}
+
 /** แปลงราคาเป็นรูปแบบสั้น เช่น 1.5M, 500K */
 export function formatPrice(price: number): string {
   if (price >= 1_000_000) {

@@ -30,3 +30,12 @@ export const PMTILES_SOURCE_LAYER_FALLBACK = "real_estate_1M";
 export const FILTERED_SOURCE_ID = "filtered-points";
 export const FILTERED_CLUSTERS_LAYER_ID = "filtered-clusters";
 export const FILTERED_UNCLUSTERED_LAYER_ID = "filtered-unclustered-point";
+
+/** Paint config สำหรับ unclustered point circle (ใช้ทั้ง PMTiles และ filtered layer) */
+export const UNCLUSTERED_CIRCLE_PAINT = {
+  "circle-color": "#11b4da",
+  "circle-radius": 4,
+  "circle-stroke-width": 1,
+  "circle-stroke-color": "#fff",
+  "circle-emissive-strength": 1,
+} as const;

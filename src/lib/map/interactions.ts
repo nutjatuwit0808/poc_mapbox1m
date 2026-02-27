@@ -9,7 +9,7 @@ import {
   MAP_MAX_ZOOM,
   MAP_EASE_DURATION_MS,
 } from "./constants";
-import { formatPrice } from "./clusterUtils";
+import { buildPropertyPopupHtml } from "./clusterUtils";
 
 /** ย้าย popup DOM ไปยัง container เพื่อให้ลอยเหนือ cluster labels */
 export function movePopupToContainer(
@@ -55,31 +55,18 @@ export function addUnclusteredClickInteraction(
     type: "click",
     target: { layerId: UNCLUSTERED_LAYER_ID },
     handler: (e) => {
-      const feature = (e as { feature?: { geometry: GeoJSON.Point; properties?: Record<string, unknown> } }).feature;
+      const feature = e.feature;
       if (!feature) return;
-      const coords = feature.geometry.coordinates;
+      const geom = feature.geometry;
+      if (geom.type !== "Point") return;
+      const coords = geom.coordinates;
       const lngLat: [number, number] = [coords[0], coords[1]];
       const props = feature.properties ?? {};
-      const price = props.price != null ? Number(props.price) : 0;
-      const area =
-        props.usable_area_sqm != null ? Number(props.usable_area_sqm) : 0;
-      const propertyType = props.property_type ?? "—";
-      const bedrooms = props.bedrooms != null ? Number(props.bedrooms) : null;
-      const bathrooms = props.bathrooms != null ? Number(props.bathrooms) : null;
-
-      const html = [
-        `<strong>${propertyType}</strong>`,
-        price > 0 ? `Price: ฿${formatPrice(price)}` : null,
-        bedrooms != null ? `Bedrooms: ${bedrooms}` : null,
-        bathrooms != null ? `Bathrooms: ${bathrooms}` : null,
-        area > 0 ? `Area: ${area} m²` : null,
-      ]
-        .filter(Boolean)
-        .join("<br>");
+      const html = buildPropertyPopupHtml(props);
 
       const popup = new mapboxgl.Popup()
         .setLngLat(lngLat)
-        .setHTML(html || "—")
+        .setHTML(html)
         .addTo(map);
       movePopupToContainer(map, popup, popupContainer);
     },

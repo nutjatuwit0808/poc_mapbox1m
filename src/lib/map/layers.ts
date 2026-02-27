@@ -13,11 +13,12 @@ import {
   CLUSTER_RADIUS,
   CLUSTER_MAX_ZOOM,
   MAP_MAX_ZOOM,
+  UNCLUSTERED_CIRCLE_PAINT,
 } from "./constants";
 import {
   getClusterColorStepExpression,
   getClusterRadiusStepExpression,
-  formatPrice,
+  buildPropertyPopupHtml,
 } from "./clusterUtils";
 import { movePopupToContainer } from "./interactions";
 
@@ -51,13 +52,7 @@ export function addUnclusteredLayer(
     source: PMTILES_SOURCE_ID,
     "source-layer": sourceLayer,
     filter: ["!", ["has", "point_count"]],
-    paint: {
-      "circle-color": "#11b4da",
-      "circle-radius": 4,
-      "circle-stroke-width": 1,
-      "circle-stroke-color": "#fff",
-      "circle-emissive-strength": 1,
-    },
+    paint: { ...UNCLUSTERED_CIRCLE_PAINT },
   });
 }
 
@@ -101,13 +96,7 @@ export function setFilteredPointsLayer(
     type: "circle",
     source: FILTERED_SOURCE_ID,
     filter: ["!", ["has", "point_count"]],
-    paint: {
-      "circle-color": "#11b4da",
-      "circle-radius": 4,
-      "circle-stroke-width": 1,
-      "circle-stroke-color": "#fff",
-      "circle-emissive-strength": 1,
-    },
+    paint: { ...UNCLUSTERED_CIRCLE_PAINT },
   });
 
   if (!filteredInteractionsAdded) {
@@ -152,26 +141,11 @@ function addFilteredUnclusteredClickHandler(
     const coords = (feature.geometry as GeoJSON.Point).coordinates;
     const lngLat: [number, number] = [coords[0], coords[1]];
     const props = feature.properties ?? {};
-    const price = props.price != null ? Number(props.price) : 0;
-    const area =
-      props.usable_area_sqm != null ? Number(props.usable_area_sqm) : 0;
-    const propertyType = props.property_type ?? "—";
-    const bedrooms = props.bedrooms != null ? Number(props.bedrooms) : null;
-    const bathrooms = props.bathrooms != null ? Number(props.bathrooms) : null;
-
-    const html = [
-      `<strong>${propertyType}</strong>`,
-      price > 0 ? `Price: ฿${formatPrice(price)}` : null,
-      bedrooms != null ? `Bedrooms: ${bedrooms}` : null,
-      bathrooms != null ? `Bathrooms: ${bathrooms}` : null,
-      area > 0 ? `Area: ${area} m²` : null,
-    ]
-      .filter(Boolean)
-      .join("<br>");
+    const html = buildPropertyPopupHtml(props);
 
     const popup = new mapboxgl.Popup()
       .setLngLat(lngLat)
-      .setHTML(html || "—")
+      .setHTML(html)
       .addTo(map);
     movePopupToContainer(map, popup, popupContainer);
   });
